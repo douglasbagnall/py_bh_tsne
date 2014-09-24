@@ -2,3 +2,5 @@
 */build/
 fasttsne/fasttsne.cpp
 *.pkl.gz
+.emacs*
+*.pyc
