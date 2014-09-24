@@ -21,7 +21,7 @@ else:
         include_dirs = [numpy.get_include(), "/usr/local/include", "orig-lvdm/"],
         library_dirs = ["/usr/local/lib"],
         extra_compile_args=['-msse2', '-O3', '-fPIC', '-w'],
-        extra_link_args=["-lopenblas"],
+        extra_link_args=["-lcblas"],
         language="c++"
         )]
 
