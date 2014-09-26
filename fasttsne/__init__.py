@@ -24,7 +24,6 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, cosine=0):
 
     @param cosine       Set to 1 to use cosine distance, 0 for euclidean distance.
     """
-    N, _ = data.shape
 
     # inplace!!
 
@@ -33,15 +32,14 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, cosine=0):
     else:
         # do PCA
         print "Reducing to %dd using PCA..." % pca_d
-        data -= data.mean(axis=0)
+        import sklearn.decomposition as deco
+        norm_data = data - data.mean(axis=0)
+        pca = deco.PCA(pca_d)
+        X = pca.fit_transform(norm_data)
+        print "%s -> %s" % (data.shape, X.shape)
 
-        # working with covariance + (svd on cov.) is
-        # much faster than svd on data directly.
-        cov = np.dot(data.T, data)/N
-        u, s, v = la.svd(cov, full_matrices=False)
-        u = u[:,0:pca_d]
-        X = np.dot(data, u)
+    N, vlen = X.shape
 
     tsne = TSNE()
-    Y = tsne.run(X, N, X.shape[1], d, perplexity, theta, cosine)
+    Y = tsne.run(X, N, vlen, d, perplexity, theta, cosine)
     return Y
