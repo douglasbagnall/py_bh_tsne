@@ -27,11 +27,8 @@ using namespace std;
 // Perform t-SNE
 void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta) {
     
-    // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { printf("Perplexity too large for the number of data points!\n"); exit(1); }
     printf("Using no_dims = %d, perplexity = %f, and theta = %f\n", no_dims, perplexity, theta);
-    bool exact = (theta == .0) ? true : false;
-    
     // Set learning parameters
     float total_time = .0;
     clock_t start, end;
@@ -59,56 +56,31 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     
     // Compute input similarities for exact t-SNE
     double* P; int* row_P; int* col_P; double* val_P;
-    if(exact) {
+    
+	// Compute asymmetric pairwise input similarities
+	computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity));
         
-        // Compute similarities
-        P = (double*) malloc(N * N * sizeof(double));
-        if(P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-        computeGaussianPerplexity(X, N, D, P, perplexity);
-    
-        // Symmetrize input similarities
-        printf("Symmetrizing...\n");
-        for(int n = 0; n < N; n++) {
-            for(int m = n + 1; m < N; m++) {
-                P[n * N + m] += P[m * N + n];
-                P[m * N + n]  = P[n * N + m];
-            }
-        }
-        double sum_P = .0;
-        for(int i = 0; i < N * N; i++) sum_P += P[i];
-        for(int i = 0; i < N * N; i++) P[i] /= sum_P;
-    }
-    
-    // Compute input similarities for approximate t-SNE
-    else {
-    
-        // Compute asymmetric pairwise input similarities
-        computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity));
-        
-        // Symmetrize input similarities
-        symmetrizeMatrix(&row_P, &col_P, &val_P, N);
-        double sum_P = .0;
-        for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
-        for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
-    }
+	// Symmetrize input similarities
+	symmetrizeMatrix(&row_P, &col_P, &val_P, N);
+	double sum_P = .0;
+	for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
+	for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
+
     end = clock();
     
     // Lie about the P-values
-    if(exact) { for(int i = 0; i < N * N; i++)        P[i] *= 12.0; }
-    else {      for(int i = 0; i < row_P[N]; i++) val_P[i] *= 12.0; }
+	for(int i = 0; i < row_P[N]; i++) val_P[i] *= 12.0;
 
 	// Initialize solution (randomly)
 	for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001;
 	
 	// Perform main training loop
-    if(exact) printf("Done in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
-    else printf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
+    printf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
     start = clock();
 	for(int iter = 0; iter < max_iter; iter++) {
         
         // Compute (approximate) gradient
-        if(exact) computeExactGradient(P, Y, N, no_dims, dY);
-        else computeGradient(P, row_P, col_P, val_P, Y, N, no_dims, dY, theta);
+        computeGradient(P, row_P, col_P, val_P, Y, N, no_dims, dY, theta);
         
         // Update gains
         for(int i = 0; i < N * no_dims; i++) gains[i] = (sign(dY[i]) != sign(uY[i])) ? (gains[i] + .2) : (gains[i] * .8);
@@ -123,17 +95,14 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
         
         // Stop lying about the P-values after a while, and switch momentum
         if(iter == stop_lying_iter) {
-            if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= 12.0; }
-            else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= 12.0; }
+            for(int i = 0; i < row_P[N]; i++) val_P[i] /= 12.0;
         }
         if(iter == mom_switch_iter) momentum = final_momentum;
         
         // Print out progress
         if(iter > 0 && iter % 50 == 0 || iter == max_iter - 1) {
             end = clock();
-            double C = .0;
-            if(exact) C = evaluateError(P, Y, N);
-            else      C = evaluateError(row_P, col_P, val_P, Y, N, theta);  // doing approximate computation here!
+            double C = evaluateError(row_P, col_P, val_P, Y, N, theta);  // doing approximate computation here!
             if(iter == 0)
                 printf("Iteration %d: error is %f\n", iter + 1, C);
             else {
@@ -149,7 +118,6 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     free(dY);
     free(uY);
     free(gains);
-    if(exact) free(P);
     else {
         free(row_P); row_P = NULL;
         free(col_P); col_P = NULL;
@@ -289,76 +257,6 @@ double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int
     }
     return C;
 }
-
-
-// Compute input similarities with a fixed perplexity
-void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity) {
-	
-	// Compute the squared Euclidean distance matrix
-	double* DD = (double*) malloc(N * N * sizeof(double));
-    if(DD == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-	computeSquaredEuclideanDistance(X, N, D, DD);
-	
-	// Compute the Gaussian kernel row by row
-	for(int n = 0; n < N; n++) {
-        
-		// Initialize some variables
-		bool found = false;
-		double beta = 1.0;
-		double min_beta = -DBL_MAX;
-		double max_beta =  DBL_MAX;
-		double tol = 1e-5;
-        double sum_P;
-		
-		// Iterate until we found a good perplexity
-		int iter = 0;
-		while(!found && iter < 200) {
-			
-			// Compute Gaussian kernel row
-			for(int m = 0; m < N; m++) P[n * N + m] = exp(-beta * DD[n * N + m]);
-			P[n * N + n] = DBL_MIN;
-			
-			// Compute entropy of current row
-			sum_P = DBL_MIN;
-			for(int m = 0; m < N; m++) sum_P += P[n * N + m];
-			double H = 0.0;
-			for(int m = 0; m < N; m++) H += beta * (DD[n * N + m] * P[n * N + m]);
-			H = (H / sum_P) + log(sum_P);
-			
-			// Evaluate whether the entropy is within the tolerance level
-			double Hdiff = H - log(perplexity);
-			if(Hdiff < tol && -Hdiff < tol) {
-				found = true;
-			}
-			else {
-				if(Hdiff > 0) {
-					min_beta = beta;
-					if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
-						beta *= 2.0;
-					else
-						beta = (beta + max_beta) / 2.0;
-				}
-				else {
-					max_beta = beta;
-					if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
-						beta /= 2.0;
-					else
-						beta = (beta + min_beta) / 2.0;
-				}
-			}
-			
-			// Update iteration counter
-			iter++;
-		}
-		
-		// Row normalize P
-		for(int m = 0; m < N; m++) P[n * N + m] /= sum_P;
-	}
-	
-	// Clean up memory
-	free(DD); DD = NULL;
-}
-
 
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
 void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K) {
