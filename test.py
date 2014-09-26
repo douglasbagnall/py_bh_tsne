@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import gzip, cPickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ else:
 
 perplexity = 30.
 theta = 0.5
-Y = fast_tsne(mnist, perplexity=perplexity, theta=theta)
+Y = fast_tsne(mnist, perplexity=perplexity, theta=theta, cosine=0)
 
 digits = set(classes)
 fig = plt.figure()

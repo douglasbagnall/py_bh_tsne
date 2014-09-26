@@ -5,7 +5,7 @@ import numpy as np
 from fasttsne import _TSNE as TSNE
 
 
-def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5):
+def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, cosine=0):
     """
     Run Barnes-Hut T-SNE on _data_.
 
@@ -20,11 +20,12 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5):
     @param perplexity   The perplexity controls the effective number of
                         neighbors.
 
-    @param theta        If set to 0, exact t-SNE is run, which takes
-                        very long for dataset > 5000 samples.
+    @param theta        Degree of BH optimisation (0-1; higher -> faster, worse).
+
+    @param cosine       Set to 1 to use cosine distance, 0 for euclidean distance.
     """
     N, _ = data.shape
-    
+
     # inplace!!
 
     if pca_d is None:
@@ -41,5 +42,5 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5):
         X = np.dot(data, u)
 
     tsne = TSNE()
-    Y = tsne.run(X, N, X.shape[1], d, perplexity, theta)
+    Y = tsne.run(X, N, X.shape[1], d, perplexity, theta, cosine)
     return Y
