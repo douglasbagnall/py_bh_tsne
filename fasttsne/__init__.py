@@ -32,6 +32,7 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, cosine=0):
         X = data
     else:
         # do PCA
+        print "Reducing to %d using PCA..." % pca_d
         data -= data.mean(axis=0)
 
         # working with covariance + (svd on cov.) is
