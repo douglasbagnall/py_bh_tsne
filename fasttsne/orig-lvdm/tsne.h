@@ -33,7 +33,6 @@ private:
     void zeroMean(double* X, int N, int D);
     void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity);
     void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K);
-    void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, double threshold);
     void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
     double randn();
 };
