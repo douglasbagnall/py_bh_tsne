@@ -1,7 +1,7 @@
 import gzip, cPickle
 import numpy as np
 import matplotlib.pyplot as plt
-
+import sys
 
 from fasttsne import fast_tsne
 
@@ -10,14 +10,19 @@ f = gzip.open("mnist.pkl.gz", "rb")
 train, val, test = cPickle.load(f)
 f.close()
 
-# Get all data in one array
-_train = np.asarray(train[0], dtype=np.float64)
-_val = np.asarray(val[0], dtype=np.float64)
-_test = np.asarray(test[0], dtype = np.float64)
-mnist = np.vstack((_train, _val, _test))
+if '--small' in sys.argv[1:]:
+    # Just use the validation examples (10k)
+    mnist = np.asarray(val[0], dtype=np.float64)
+    classes = val[1]
+else:
+    # Get all data in one array
+    _train = np.asarray(train[0], dtype=np.float64)
+    _val = np.asarray(val[0], dtype=np.float64)
+    _test = np.asarray(test[0], dtype = np.float64)
+    mnist = np.vstack((_train, _val, _test))
 
-# Also the classes, for labels in the plot later
-classes = np.hstack((train[1], val[1], test[1]))
+    # Also the classes, for labels in the plot later
+    classes = np.hstack((train[1], val[1], test[1]))
 
 perplexity = 30.
 theta = 0.5
