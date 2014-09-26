@@ -118,11 +118,9 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     free(dY);
     free(uY);
     free(gains);
-    else {
-        free(row_P); row_P = NULL;
-        free(col_P); col_P = NULL;
-        free(val_P); val_P = NULL;
-    }
+	free(row_P); row_P = NULL;
+	free(col_P); col_P = NULL;
+	free(val_P); val_P = NULL;
     printf("Fitting performed in %4.2f seconds.\n", total_time);
 }
 
