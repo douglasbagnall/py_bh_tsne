@@ -33,8 +33,8 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, cosine=0):
     else:
         # do PCA
         data -= data.mean(axis=0)
-    
-        # working with covariance + (svd on cov.) is 
+
+        # working with covariance + (svd on cov.) is
         # much faster than svd on data directly.
         cov = np.dot(data.T, data)/N
         u, s, v = la.svd(cov, full_matrices=False)
