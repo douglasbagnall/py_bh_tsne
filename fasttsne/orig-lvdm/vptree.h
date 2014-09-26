@@ -86,7 +86,7 @@ double cosine_distance(const DataPoint &t1, const DataPoint &t2) {
     for(int d = 0; d < t1.dimensionality(); d++){
         dd += t1.x(d) * t2.x(d);
     }
-    return 2.0 - dd / (t1.len() * t2.len());
+    return 1.0 - dd / (t1.len() * t2.len());
 }
 
 template<typename T, double (*distance)( const T&, const T& )>
