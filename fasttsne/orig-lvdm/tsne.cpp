@@ -149,83 +149,8 @@ void TSNE::computeGradient(double* P, int* inp_row_P, int* inp_col_P, double* in
     delete tree;
 }
 
-// Compute gradient of the t-SNE cost function (exact)
-void TSNE::computeExactGradient(double* P, double* Y, int N, int D, double* dC) {
-
-	// Make sure the current gradient contains zeros
-	for(int i = 0; i < N * D; i++) dC[i] = 0.0;
-
-    // Compute the squared Euclidean distance matrix
-    double* DD = (double*) malloc(N * N * sizeof(double));
-    if(DD == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    computeSquaredEuclideanDistance(Y, N, D, DD);
-
-    // Compute Q-matrix and normalization sum
-    double* Q    = (double*) malloc(N * N * sizeof(double));
-    if(Q == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    double sum_Q = .0;
-    for(int n = 0; n < N; n++) {
-    	for(int m = 0; m < N; m++) {
-            if(n != m) {
-                Q[n * N + m] = 1 / (1 + DD[n * N + m]);
-                sum_Q += Q[n * N + m];
-            }
-        }
-    }
-
-	// Perform the computation of the gradient
-	for(int n = 0; n < N; n++) {
-    	for(int m = 0; m < N; m++) {
-            if(n != m) {
-                double mult = (P[n * N + m] - (Q[n * N + m] / sum_Q)) * Q[n * N + m];
-                for(int d = 0; d < D; d++) {
-                    dC[n * D + d] += (Y[n * D + d] - Y[m * D + d]) * mult;
-                }
-            }
-		}
-	}
-
-    // Free memory
-    free(DD); DD = NULL;
-    free(Q);  Q  = NULL;
-}
 
 
-// Evaluate t-SNE cost function (exactly)
-double TSNE::evaluateError(double* P, double* Y, int N) {
-
-    // Compute the squared Euclidean distance matrix
-    double* DD = (double*) malloc(N * N * sizeof(double));
-    double* Q = (double*) malloc(N * N * sizeof(double));
-    if(DD == NULL || Q == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    computeSquaredEuclideanDistance(Y, N, 2, DD);
-
-    // Compute Q-matrix and normalization sum
-    double sum_Q = DBL_MIN;
-    for(int n = 0; n < N; n++) {
-    	for(int m = 0; m < N; m++) {
-            if(n != m) {
-                Q[n * N + m] = 1 / (1 + DD[n * N + m]);
-                sum_Q += Q[n * N + m];
-            }
-            else Q[n * N + m] = DBL_MIN;
-        }
-    }
-    for(int i = 0; i < N * N; i++) Q[i] /= sum_Q;
-
-    // Sum t-SNE error
-    double C = .0;
-	for(int n = 0; n < N; n++) {
-		for(int m = 0; m < N; m++) {
-			C += P[n * N + m] * log((P[n * N + m] + 1e-9) / (Q[n * N + m] + 1e-9));
-		}
-	}
-
-    // Clean up memory
-    free(DD);
-    free(Q);
-	return C;
-}
 
 // Evaluate t-SNE cost function (approximately)
 double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, double theta)
@@ -579,44 +504,4 @@ double TSNE::randn() {
 	x *= radius;
 	y *= radius;
 	return x;
-}
-
-// Function that loads data from a t-SNE file
-// Note: this function does a malloc that should be freed elsewhere
-bool TSNE::load_data(double** data, int* n, int* d, double* theta, double* perplexity) {
-
-	// Open file, read first 2 integers, allocate memory, and read the data
-    FILE *h;
-	if((h = fopen("data.dat", "r+b")) == NULL) {
-		printf("Error: could not open data file.\n");
-		return false;
-	}
-	fread(n, sizeof(int), 1, h);											// number of datapoints
-	fread(d, sizeof(int), 1, h);											// original dimensionality
-    fread(theta, sizeof(double), 1, h);										// gradient accuracy
-	fread(perplexity, sizeof(double), 1, h);								// perplexity
-	*data = (double*) calloc(*d * *n, sizeof(double));
-    if(*data == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    fread(*data, sizeof(double), *n * *d, h);                               // the data
-	fclose(h);
-	printf("Read the %i x %i data matrix successfully!\n", *n, *d);
-	return true;
-}
-
-// Function that saves map to a t-SNE file
-void TSNE::save_data(double* data, int* landmarks, double* costs, int n, int d) {
-
-	// Open file, write first 2 integers and then the data
-	FILE *h;
-	if((h = fopen("result.dat", "w+b")) == NULL) {
-		printf("Error: could not open data file.\n");
-		return;
-	}
-	fwrite(&n, sizeof(int), 1, h);
-	fwrite(&d, sizeof(int), 1, h);
-    fwrite(data, sizeof(double), n * d, h);
-	fwrite(landmarks, sizeof(int), n, h);
-    fwrite(costs, sizeof(double), n, h);
-    fclose(h);
-	printf("Wrote the %i x %i data matrix successfully!\n", n, d);
 }
