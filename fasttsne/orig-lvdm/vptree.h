@@ -24,32 +24,26 @@ class DataPoint
     int _D;
     int _ind;
     double* _x;
-    double _len;
 
 public:
     DataPoint() {
         _D = 1;
         _ind = -1;
         _x = NULL;
-        _len = 0;
     }
     DataPoint(int D, int ind, double* x) {
         _D = D;
         _ind = ind;
         _x = (double*) malloc(_D * sizeof(double));
-        double len_sq = 0.0;
         for(int d = 0; d < _D; d++){
             _x[d] = x[d];
-            len_sq + x[d] * x[d];
         }
-        _len = sqrt(len_sq);
     }
     DataPoint(const DataPoint& other) {                     // this makes a deep copy -- should not free anything
         if(this != &other) {
             _D = other.dimensionality();
             _ind = other.index();
             _x = (double*) malloc(_D * sizeof(double));
-            _len = other.len();
             for(int d = 0; d < _D; d++) _x[d] = other.x(d);
         }
     }
@@ -59,7 +53,6 @@ public:
             if(_x != NULL) free(_x);
             _D = other.dimensionality();
             _ind = other.index();
-            _len = other.len();
             _x = (double*) malloc(_D * sizeof(double));
             for(int d = 0; d < _D; d++) _x[d] = other.x(d);
         }
@@ -68,7 +61,6 @@ public:
     int index() const { return _ind; }
     int dimensionality() const { return _D; }
     double x(int d) const { return _x[d]; }
-    double len() const { return _len; }
 };
 
 
@@ -76,17 +68,6 @@ double euclidean_distance(const DataPoint &t1, const DataPoint &t2) {
     double dd = .0;
     for(int d = 0; d < t1.dimensionality(); d++) dd += (t1.x(d) - t2.x(d)) * (t1.x(d) - t2.x(d));
     return dd;
-}
-
-double cosine_distance(const DataPoint &t1, const DataPoint &t2) {
-    double dd = .0;
-    if (t1.len() == 0 || t2.len() == 0){
-        return 2.0;
-    }
-    for(int d = 0; d < t1.dimensionality(); d++){
-        dd += t1.x(d) * t2.x(d);
-    }
-    return 1.0 - dd / (t1.len() * t2.len());
 }
 
 template<typename T, double (*distance)( const T&, const T& )>
