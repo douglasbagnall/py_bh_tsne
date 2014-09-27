@@ -218,88 +218,83 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
     row_P[0] = 0;
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;
 
-	if (0){
+	// Build ball tree on data set
+	VpTree<DataPoint, euclidean_distance>* tree = new VpTree<DataPoint, euclidean_distance>();
+	vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
+	for(int n = 0; n < N; n++){
+		obj_X[n] = DataPoint(D, n, X + n * D);
 	}
-	else {
-		// Build ball tree on data set
-		VpTree<DataPoint, euclidean_distance>* tree = new VpTree<DataPoint, euclidean_distance>();
-		vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
-		for(int n = 0; n < N; n++){
-			obj_X[n] = DataPoint(D, n, X + n * D);
-		}
-		tree->create(obj_X);
+	tree->create(obj_X);
 
-		// Loop over all points to find nearest neighbors
-		printf("Building tree...\n");
-		vector<DataPoint> indices;
-		vector<double> distances;
-		for(int n = 0; n < N; n++) {
+	// Loop over all points to find nearest neighbors
+	printf("Building tree...\n");
+	vector<DataPoint> indices;
+	vector<double> distances;
+	for(int n = 0; n < N; n++) {
 
-			if(n % 10000 == 0) printf(" - point %d of %d\n", n, N);
+		if(n % 10000 == 0) printf(" - point %d of %d\n", n, N);
 
-			// Find nearest neighbors
-			indices.clear();
-			distances.clear();
-			tree->search(obj_X[n], K + 1, &indices, &distances);
+		// Find nearest neighbors
+		indices.clear();
+		distances.clear();
+		tree->search(obj_X[n], K + 1, &indices, &distances);
 
-			// Initialize some variables for binary search
-			bool found = false;
-			double beta = 1.0;
-			double min_beta = -DBL_MAX;
-			double max_beta =  DBL_MAX;
-			double tol = 1e-5;
+		// Initialize some variables for binary search
+		bool found = false;
+		double beta = 1.0;
+		double min_beta = -DBL_MAX;
+		double max_beta =  DBL_MAX;
+		double tol = 1e-5;
 
-			// Iterate until we found a good perplexity
-			int iter = 0; double sum_P;
-			while(!found && iter < 200) {
+		// Iterate until we found a good perplexity
+		int iter = 0; double sum_P;
+		while(!found && iter < 200) {
 
-				// Compute Gaussian kernel row
-				for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
+			// Compute Gaussian kernel row
+			for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
 
-				// Compute entropy of current row
-				sum_P = DBL_MIN;
-				for(int m = 0; m < K; m++) sum_P += cur_P[m];
-				double H = .0;
-				for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
-				H = (H / sum_P) + log(sum_P);
+			// Compute entropy of current row
+			sum_P = DBL_MIN;
+			for(int m = 0; m < K; m++) sum_P += cur_P[m];
+			double H = .0;
+			for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
+			H = (H / sum_P) + log(sum_P);
 
-				// Evaluate whether the entropy is within the tolerance level
-				double Hdiff = H - log(perplexity);
-				if(Hdiff < tol && -Hdiff < tol) {
+			// Evaluate whether the entropy is within the tolerance level
+			double Hdiff = H - log(perplexity);
+			if(Hdiff < tol && -Hdiff < tol) {
 				found = true;
+			}
+			else {
+				if(Hdiff > 0) {
+					min_beta = beta;
+					if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
+						beta *= 2.0;
+					else
+						beta = (beta + max_beta) / 2.0;
 				}
 				else {
-					if(Hdiff > 0) {
-						min_beta = beta;
-						if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
-							beta *= 2.0;
-						else
-							beta = (beta + max_beta) / 2.0;
-					}
-					else {
-						max_beta = beta;
-						if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
-							beta /= 2.0;
-						else
-							beta = (beta + min_beta) / 2.0;
-					}
+					max_beta = beta;
+					if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
+						beta /= 2.0;
+					else
+						beta = (beta + min_beta) / 2.0;
 				}
-
-				// Update iteration counter
-				iter++;
 			}
 
-			// Row-normalize current row of P and store in matrix
-			for(int m = 0; m < K; m++) cur_P[m] /= sum_P;
-			for(int m = 0; m < K; m++) {
-				col_P[row_P[n] + m] = indices[m + 1].index();
-				val_P[row_P[n] + m] = cur_P[m];
-			}
+			// Update iteration counter
+			iter++;
 		}
-		obj_X.clear();
-		delete tree;
 
+		// Row-normalize current row of P and store in matrix
+		for(int m = 0; m < K; m++) cur_P[m] /= sum_P;
+		for(int m = 0; m < K; m++) {
+			col_P[row_P[n] + m] = indices[m + 1].index();
+			val_P[row_P[n] + m] = cur_P[m];
+		}
 	}
+	obj_X.clear();
+	delete tree;
     // Clean up memory
     free(cur_P);
 }
