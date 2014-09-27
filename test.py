@@ -25,9 +25,9 @@ else:
     # Also the classes, for labels in the plot later
     classes = np.hstack((train[1], val[1], test[1]))
 
-perplexity = 30.
+perplexity = 10.
 theta = 0.5
-Y = fast_tsne(mnist, perplexity=perplexity, theta=theta, cosine=0)
+Y = fast_tsne(mnist, perplexity=perplexity, theta=theta, normalise=0, pca_d=10)
 
 digits = set(classes)
 fig = plt.figure()
