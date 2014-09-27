@@ -27,7 +27,7 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, normalise=0):
 
     # inplace!!
 
-    if pca_d is None:
+    if not pca_d:
         X = data
     else:
         # do PCA
