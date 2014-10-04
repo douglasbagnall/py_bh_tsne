@@ -38,12 +38,13 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, normalise=0):
 
         import sklearn.decomposition as deco
         print "normalising..."
-        norm_data = data - data.mean(axis=0)
+        data = data - data.mean(axis=0)
         print "pca..."
         #pca = deco.PCA(pca_d)
         pca = deco.TruncatedSVD(n_components=pca_d)
-        X = pca.fit_transform(norm_data)
+        X = pca.fit_transform(data)
         print "%s -> %s" % (data.shape, X.shape)
+        del data
 
     N, vlen = X.shape
     print X.shape
