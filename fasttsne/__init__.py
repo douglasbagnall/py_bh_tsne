@@ -33,14 +33,14 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, normalise=0):
         # do PCA
         print "Reducing to %dd using PCA..." % pca_d
         if normalise:
-            from sklearn.preprocessing import normalize
-            data = normalize(data)
+            from sklearn.preprocessing import Normalizer
+            data = Normalizer().fit_transform(data)
 
         import sklearn.decomposition as deco
         print "normalising..."
         data = data - data.mean(axis=0)
         print "pca..."
-        #pca = deco.PCA(pca_d)
+        #pca = deco.RandomizedPCA(pca_d)
         pca = deco.TruncatedSVD(n_components=pca_d)
         X = pca.fit_transform(data)
         print "%s -> %s" % (data.shape, X.shape)
