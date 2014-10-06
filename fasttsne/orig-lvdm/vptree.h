@@ -81,12 +81,12 @@ double euclidean_distance(const DataPoint &t1, const DataPoint &t2) {
 double cosine_distance(const DataPoint &t1, const DataPoint &t2) {
     double dd = .0;
     if (t1.len() == 0 || t2.len() == 0){
-        return 2.0;
+        return 3.14159265;
     }
     for(int d = 0; d < t1.dimensionality(); d++){
         dd += t1.x(d) * t2.x(d);
     }
-    return 1.0 - dd / (t1.len() * t2.len());
+    return acos(dd / (t1.len() * t2.len()));
 }
 
 template<typename T, double (*distance)( const T&, const T& )>

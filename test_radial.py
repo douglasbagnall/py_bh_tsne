@@ -28,7 +28,11 @@ def generate_angular_clusters(n, d, extra_d=10):
 def main():
     data, classes = generate_angular_clusters(5000, 4)
     #print data
-    Y = fast_tsne(data, perplexity=10, normalise=1)
+    if len(sys.argv) > 1:
+        mode = int(sys.argv[1])
+    else:
+        mode = 2
+    Y = fast_tsne(data, perplexity=10, mode=mode)
     #print zip(classes, Y)[:50]
     digits = set(classes)
     fig = plt.figure()
