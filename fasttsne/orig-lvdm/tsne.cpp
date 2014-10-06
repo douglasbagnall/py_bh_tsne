@@ -25,11 +25,14 @@ extern "C" {
 using namespace std;
 
 // Perform t-SNE
-void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool normalise) {
-
-    if(N - 1 < 3 * perplexity) { printf("Perplexity too large for the number of data points!\n"); exit(1); }
-    printf("Using no_dims = %d, perplexity = %f, and theta = %f, normalise %d\n",
-		   no_dims, perplexity, theta, normalise);
+void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity,
+			   double theta, int mode) {
+	int K = 3 * perplexity;
+	if (N - 1 < K){
+		printf("Perplexity too large for the number of data points!\n"); exit(1);
+	}
+    printf("Using no_dims = %d, perplexity = %f, and theta = %f, mode %d\n",
+		   no_dims, perplexity, theta, mode);
     // Set learning parameters
     float total_time = .0;
     clock_t start, end;
@@ -44,9 +47,9 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     for(int i = 0; i < N * no_dims; i++)    uY[i] =  .0;
     for(int i = 0; i < N * no_dims; i++) gains[i] = 1.0;
 
-	/*perhaps normalise each input vector (if angle is more important
-	  than location)*/
-	if (normalise){
+	/*perhaps normalise each input vector to unit magnitude(if angle
+	  is more important than location)*/
+	if (mode == D_NORMALIZED){
 		for(int i = 0; i < N; i++) {
 			double total = 0.0;
 			double *v = X + i * D;
@@ -77,7 +80,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     double* P; int* row_P; int* col_P; double* val_P;
 
 	// Compute asymmetric pairwise input similarities
-	computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity));
+	computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, K);
 
 	// Symmetrize input similarities
 	symmetrizeMatrix(&row_P, &col_P, &val_P, N);

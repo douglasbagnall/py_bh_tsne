@@ -11,6 +11,10 @@
 #ifndef TSNE_H
 #define TSNE_H
 
+enum {
+    D_EUCLIDEAN = 0,
+    D_NORMALIZED,
+};
 
 static inline double sign(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
 
@@ -18,7 +22,7 @@ static inline double sign(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.
 class TSNE
 {    
 public:
-    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool normalise);
+    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int mode);
 
     void symmetrizeMatrix(int** row_P, int** col_P, double** val_P, int N); // should be static?!
 
