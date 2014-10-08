@@ -1,6 +1,6 @@
 import scipy.linalg as la
 import numpy as np
-
+import time
 
 from fasttsne import _TSNE as TSNE
 
@@ -31,6 +31,7 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0):
         X = data
     else:
         # do PCA
+        t = time.time()
         print "Reducing to %dd using PCA..." % pca_d
         if mode == 1:
             from sklearn.preprocessing import Normalizer
@@ -43,7 +44,7 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0):
         #pca = deco.RandomizedPCA(pca_d)
         pca = deco.TruncatedSVD(n_components=pca_d)
         X = pca.fit_transform(data)
-        print "%s -> %s" % (data.shape, X.shape)
+        print "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
         del data
 
     N, vlen = X.shape
