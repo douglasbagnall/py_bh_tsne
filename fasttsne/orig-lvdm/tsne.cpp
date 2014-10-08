@@ -392,25 +392,6 @@ void TSNE::symmetrizeMatrix(int** _row_P, int** _col_P, double** _val_P, int N) 
     free(row_counts); row_counts  = NULL;
 }
 
-// Compute squared Euclidean distance matrix (using BLAS)
-void TSNE::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD) {
-    double* dataSums = (double*) calloc(N, sizeof(double));
-    if(dataSums == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    for(int n = 0; n < N; n++) {
-        for(int d = 0; d < D; d++) {
-            dataSums[n] += (X[n * D + d] * X[n * D + d]);
-        }
-    }
-    for(int n = 0; n < N; n++) {
-        for(int m = 0; m < N; m++) {
-            DD[n * N + m] = dataSums[n] + dataSums[m];
-        }
-    }
-    cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, N, N, D, -2.0, X, D, X, D, 1.0, DD, N);
-    free(dataSums); dataSums = NULL;
-}
-
-
 // Makes data zero-mean
 void TSNE::zeroMean(double* X, int N, int D) {
 

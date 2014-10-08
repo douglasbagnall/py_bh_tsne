@@ -111,20 +111,6 @@ QuadTree::~QuadTree()
 }
 
 
-// Update the data underlying this tree
-void QuadTree::setData(double* inp_data)
-{
-    data = inp_data;
-}
-
-
-// Get the parent of the current tree
-QuadTree* QuadTree::getParent()
-{
-    return parent;
-}
-
-
 // Insert a point into the QuadTree
 bool QuadTree::insert(int new_index)
 {
@@ -216,53 +202,6 @@ bool QuadTree::isCorrect()
                         southWest->isCorrect() &&
                         southEast->isCorrect();
     else return true;
-}
-
-
-// Rebuilds a possibly incorrect tree (LAURENS: This function is not tested yet!)
-void QuadTree::rebuildTree()
-{
-    for(int n = 0; n < size; n++) {
-        
-        // Check whether point is erroneous
-        double* point = data + index[n] * QT_NO_DIMS;
-        if(!boundary.containsPoint(point)) {
-            
-            // Remove erroneous point
-            int rem_index = index[n];
-            for(int m = n + 1; m < size; m++) index[m - 1] = index[m];
-            index[size - 1] = -1;
-            size--;
-            
-            // Update center-of-mass and counter in all parents
-            bool done = false;
-            QuadTree* node = this;
-            while(!done) {
-                for(int d = 0; d < QT_NO_DIMS; d++) {
-                    node->center_of_mass[d] = ((double) node->cum_size * node->center_of_mass[d] - point[d]) / (double) (node->cum_size - 1);
-                }
-                node->cum_size--;
-                if(node->getParent() == NULL) done = true;
-                else node = node->getParent();
-            }
-            
-            // Reinsert point in the root tree
-            node->insert(rem_index);
-        }
-    }    
-    
-    // Rebuild lower parts of the tree
-    northWest->rebuildTree();
-    northEast->rebuildTree();
-    southWest->rebuildTree();
-    southEast->rebuildTree();
-}
-
-
-// Build a list of all indices in quadtree
-void QuadTree::getAllIndices(int* indices)
-{
-    getAllIndices(indices, 0);
 }
 
 
