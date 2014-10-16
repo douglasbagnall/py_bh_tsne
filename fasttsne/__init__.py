@@ -5,7 +5,7 @@ import time
 from fasttsne import _TSNE as TSNE
 
 
-def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0):
+def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalise=0):
     """
     Run Barnes-Hut T-SNE on _data_.
 
@@ -26,6 +26,9 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0):
     """
 
     # inplace!!
+    if normalise:
+        print "normalising..."
+        data = data - data.mean(axis=0)
 
     if not pca_d or pca_d > data.shape[1]:
         X = data
@@ -37,11 +40,10 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0):
             from sklearn.preprocessing import Normalizer
             data = Normalizer().fit_transform(data)
 
+
         import sklearn.decomposition as deco
-        print "normalising..."
-        data = data - data.mean(axis=0)
         print "pca..."
-        #pca = deco.RandomizedPCA(pca_d)
+        #pca = deco.RandomizedPCA(pca_d, whiten=True)
         pca = deco.TruncatedSVD(n_components=pca_d)
         X = pca.fit_transform(data)
         print "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
