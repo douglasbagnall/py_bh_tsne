@@ -20,7 +20,7 @@ else:
         sources=["orig-lvdm/quadtree.cpp", "orig-lvdm/tsne.cpp", "fasttsne.pyx"],
         include_dirs = [numpy.get_include(), "/usr/local/include", "orig-lvdm/"],
         library_dirs = ["/usr/local/lib"],
-        extra_compile_args=['-march=native', '-O3', '-ffast-math', '-fPIC', '-w'],
+        extra_compile_args=['-march=native', '-O3', '-ffast-math', '-fPIC', '-w', '-ggdb'],
         extra_link_args=["-lcblas"],
         language="c++"
         )]
