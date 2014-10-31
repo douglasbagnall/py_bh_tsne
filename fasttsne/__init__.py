@@ -4,6 +4,37 @@ import time
 
 from fasttsne import _TSNE as TSNE
 
+def timed_reducer(f):
+    def f2(data, d, mode, **kwargs):
+        t = time.time()
+        print "Reducing to %dd using %s..." % (d, f.__name__)
+        if mode == 1:
+            from sklearn.preprocessing import Normalizer
+            data = Normalizer().fit_transform(data)
+        X = f(data, d, mode, **kwargs)
+        print "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
+        return X
+    return f2
+
+
+@timed_reducer
+def sparse_encode(data, d, mode, alpha=500):
+    import sklearn.decomposition as deco
+    print "finding dict..."
+    code, dictionary, errors = deco.dict_learning(data[:1000], d, alpha, verbose=True)
+    print code, dictionary, errors
+    return deco.sparse_encode(data, dictionary)
+
+@timed_reducer
+def pca_reduce(data, pca_d, mode, algorithm='TruncatedSVD'):
+    import sklearn.decomposition as deco
+    alg = getattr(deco, algorithm)
+    print "pca..."
+    #pca = deco.RandomizedPCA(pca_d, whiten=True)
+    pca = alg(n_components=pca_d)
+    X = pca.fit_transform(data)
+    return X
+
 
 def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalise=0):
     """
@@ -33,20 +64,7 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
     if not pca_d or pca_d > data.shape[1]:
         X = data
     else:
-        # do PCA
-        t = time.time()
-        print "Reducing to %dd using PCA..." % pca_d
-        if mode == 1:
-            from sklearn.preprocessing import Normalizer
-            data = Normalizer().fit_transform(data)
-
-
-        import sklearn.decomposition as deco
-        print "pca..."
-        #pca = deco.RandomizedPCA(pca_d, whiten=True)
-        pca = deco.TruncatedSVD(n_components=pca_d)
-        X = pca.fit_transform(data)
-        print "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
+        X = pca_reduce(data, pca_d, mode)
         del data
 
     N, vlen = X.shape
