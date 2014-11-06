@@ -26,17 +26,24 @@ def sparse_encode(data, d, mode, alpha=500):
     return deco.sparse_encode(data, dictionary)
 
 @timed_reducer
-def pca_reduce(data, pca_d, mode, algorithm='TruncatedSVD'):
+def pca_reduce(data, pca_d, mode, algorithm='RandomizedPCA'):
     import sklearn.decomposition as deco
     alg = getattr(deco, algorithm)
     print "pca..."
-    #pca = deco.RandomizedPCA(pca_d, whiten=True)
     pca = alg(n_components=pca_d)
     X = pca.fit_transform(data)
     return X
 
+@timed_reducer
+def whitened_pca_reduce(data, pca_d, mode):
+    import sklearn.decomposition as deco
+    print "pca..."
+    pca = deco.RandomizedPCA(pca_d, whiten=True)
+    X = pca.fit_transform(data)
+    return X
 
-def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalise=0):
+def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalise=0,
+              whiten=0):
     """
     Run Barnes-Hut T-SNE on _data_.
 
@@ -54,6 +61,10 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
     @param theta        Degree of BH optimisation (0-1; higher -> faster, worse).
 
     @param mode         0: Euclidean; 1: normalised Euclidean.
+
+    @param normalise    Normalise mean around zero.
+
+    @param whiten       Whiten when doing PCA.
     """
 
     # inplace!!
@@ -63,6 +74,9 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
 
     if not pca_d or pca_d > data.shape[1]:
         X = data
+    elif whiten:
+        X = whitened_pca_reduce(data, pca_d, mode)
+        del data
     else:
         X = pca_reduce(data, pca_d, mode)
         del data
