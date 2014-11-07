@@ -9,7 +9,14 @@
 
 #include <math.h>
 #include <float.h>
-#include <cblas.h>
+
+
+#ifdef MACOSX
+    #include <Accelerate/Accelerate.h>
+#else
+    #include <cblas.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "quadtree.h"
