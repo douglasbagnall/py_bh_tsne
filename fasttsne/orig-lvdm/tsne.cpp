@@ -18,7 +18,12 @@
 #include "tsne.h"
 
 extern "C" {
-    #include <cblas.h>
+	
+    #ifdef MACOSX
+       #include <Accelerate/Accelerate.h>
+    #else
+       #include <cblas.h>
+    #endif    
 }
 
 

@@ -10,7 +10,7 @@ if sys.platform == 'darwin':
         name="fasttsne",
         sources=["orig-lvdm/quadtree.cpp", "orig-lvdm/tsne.cpp", "fasttsne.pyx"],
         include_dirs = [numpy.get_include(), "orig-lvdm/"],
-        extra_compile_args=['-faltivec', '-I/System/Library/Frameworks/vecLib.framework/Headers'],
+        extra_compile_args=['-I/System/Library/Frameworks/vecLib.framework/Headers', '-DMACOSX'],
         extra_link_args=["-Wl,-framework", "-Wl,Accelerate", "-lcblas"],
         language="c++"
         )]
