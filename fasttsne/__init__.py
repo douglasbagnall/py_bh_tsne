@@ -11,40 +11,32 @@ def timed_reducer(f):
         print >> sys.stderr, "Reducing to %dd using %s..." % (d, f.__name__)
         if mode == 1:
             from sklearn.preprocessing import Normalizer
-            data = Normalizer().fit_transform(data)
+            data = Normalizer(copy=False).fit_transform(data)
         X = f(data, d, mode, **kwargs)
         print >> sys.stderr, "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
         return X
     return f2
 
-
 @timed_reducer
-def sparse_encode(data, d, mode, alpha=500):
-    import sklearn.decomposition as deco
-    print "finding dict..."
-    code, dictionary, errors = deco.dict_learning(data[:1000], d, alpha, verbose=True)
-    print code, dictionary, errors
-    return deco.sparse_encode(data, dictionary)
-
-@timed_reducer
-def pca_reduce(data, pca_d, mode, algorithm='RandomizedPCA'):
+def pca_reduce(data, pca_d, mode,
+               algorithm='RandomizedPCA',
+               whiten=False
+           ):
     import sklearn.decomposition as deco
     alg = getattr(deco, algorithm)
-    print "pca..."
-    pca = alg(n_components=pca_d)
+    print >> sys.stderr, "pca..."
+    try:
+        pca = alg(n_components=pca_d, whiten=whiten)
+    except TypeError, e:
+        #some don't take whiten argument. If whiten is false, carry on.
+        if whiten:
+            raise
+        pca = alg(n_components=pca_d)
     X = pca.fit_transform(data)
     return X
 
-@timed_reducer
-def whitened_pca_reduce(data, pca_d, mode):
-    import sklearn.decomposition as deco
-    print "pca..."
-    pca = deco.RandomizedPCA(pca_d, whiten=True)
-    X = pca.fit_transform(data)
-    return X
-
-def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalise=0,
-              whiten=0):
+def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalise_mean=0,
+              whiten=0, pca_algo='RandomizedPCA'):
     """
     Run Barnes-Hut T-SNE on _data_.
 
@@ -63,9 +55,11 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
 
     @param mode         0: Euclidean; 1: normalised Euclidean.
 
-    @param normalise    Normalise mean around zero.
+    @param normalise_mean Normalise mean around zero.
 
     @param whiten       Whiten when doing PCA.
+
+    @param pca_algo     Which scikit-learn PCA implementation to use.
     """
 
     # inplace!!
@@ -75,11 +69,8 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
 
     if not pca_d or pca_d > data.shape[1]:
         X = data
-    elif whiten:
-        X = whitened_pca_reduce(data, pca_d, mode)
-        del data
     else:
-        X = pca_reduce(data, pca_d, mode)
+        X = pca_reduce(data, pca_d, mode, algorithm=pca_algo, whiten=whiten)
         del data
 
     N, vlen = X.shape
