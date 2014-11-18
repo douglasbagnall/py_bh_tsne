@@ -1,18 +1,19 @@
 import scipy.linalg as la
 import numpy as np
 import time
+import sys
 
 from fasttsne import _TSNE as TSNE
 
 def timed_reducer(f):
     def f2(data, d, mode, **kwargs):
         t = time.time()
-        print "Reducing to %dd using %s..." % (d, f.__name__)
+        print >> sys.stderr, "Reducing to %dd using %s..." % (d, f.__name__)
         if mode == 1:
             from sklearn.preprocessing import Normalizer
             data = Normalizer().fit_transform(data)
         X = f(data, d, mode, **kwargs)
-        print "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
+        print >> sys.stderr, "%s -> %s. Took %.1fs" % (data.shape, X.shape, time.time() - t)
         return X
     return f2
 
@@ -68,8 +69,8 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
     """
 
     # inplace!!
-    if normalise:
-        print "normalising..."
+    if normalise_mean:
+        print >> sys.stderr, "normalising..."
         data = data - data.mean(axis=0)
 
     if not pca_d or pca_d > data.shape[1]:
@@ -82,7 +83,7 @@ def fast_tsne(data, pca_d=None, d=2, perplexity=30., theta=0.5, mode=0, normalis
         del data
 
     N, vlen = X.shape
-    print X.shape
+    print >> sys.stderr, X.shape
 
     tsne = TSNE()
     Y = tsne.run(X, N, vlen, d, perplexity, theta, mode)
