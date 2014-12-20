@@ -1,30 +1,48 @@
-Summary
-=======
+This is a Python wrapper for [Barnes-Hut
+t-SNE](http://homepage.tudelft.nl/19j49/t-SNE.html) forked from
+[Christian Osendorfer's version](https://github.com/osdf/py_bh_tsne).
+It has been tuned with specific uses in mind, so it *might* better
+than the original for you, and if it does, it is likely to be slightly
+faster.
 
-A python wrapper for [Barnes-Hut t-SNE](http://homepage.tudelft.nl/19j49/t-SNE.html). The wrapper was successfully tested on OSX (10.6/10.7), Ubuntu (11.04) and Arch Linux.
+Non-commercial use only
+-----------------------
 
-The modifications to the original [C++ source](http://homepage.tudelft.nl/19j49/t-SNE_files/bh_tsne.tar.gz) are minimal: See the diff for the second overall commit.
+This (and other forks) are based on Laurens van der Maaten's original
+[code](http://homepage.tudelft.nl/19j49/t-SNE.html) which is licensed
+for **non-commercial use only**. Sorry, that is just how it is.
 
-Differently to an already existing [wrapper](https://github.com/ninjin/barnes-hut-sne), I use [cython](http://www.cython.org).
+Changes from the osdf version
+-----------------------------
+
+* Requires with `cblas`, not `openblas`.
+* Optimised compilation arguments, including `-ffast-math`.
+* All unused function in original code are removed.
+* Exact t-SNE option is gone.
+* Options for normalising vectors to unit hyper-sphere.
+* Fiddling with pre-t-SNE PCA options.
 
 Requirements
 ------------
 
 * [numpy](numpy.scipy.org)
 * [cython](cython.org)
-* [openblas](https://github.com/xianyi/OpenBLAS). Tested version is v0.2.5 and v0.2.6 (not necessary for OSX).
-
-
-Building
---------
-In the subdirectory(!) ```fasttsne/```, run ```make```. Make sure that your openblas library is available. Or any other BLAS library, but then changes in ```fasttsne/setup.py``` are necessary (change ```include_dirs``` and/or ```library_dirs```). 
 
 
 Testing
 -------
-For testing the algorithm, add ```fasttsne/``` to your ```PYTHONPATH``` and run ```python test.py``` after a successful build. Note that the file ```mnist.pkl.gz``` has to be in the main directory. You can download it from [here](http://deeplearning.net/data/mnist/mnist.pkl.gz).
+
+For testing the algorithm, add ```fasttsne/``` to your
+```PYTHONPATH``` and run ```python test.py``` after a successful
+build. Note that the file ```mnist.pkl.gz``` has to be in the main
+directory. You can download it from
+[here](http://deeplearning.net/data/mnist/mnist.pkl.gz).
 
 
 More Information
 ----------------
-See *Barnes-Hut-SNE*, L.J.P. van der Maaten. It is available on [arxiv](http://arxiv.org/abs/1301.3342).
+
+See *Barnes-Hut-SNE*, L.J.P. van der Maaten. It is available on
+[arxiv](http://arxiv.org/abs/1301.3342). Also check out Christian
+Osendorfer's version, which is careful not to mess too much with the
+original code.
