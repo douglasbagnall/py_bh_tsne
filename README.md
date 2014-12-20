@@ -5,12 +5,15 @@ It has been tuned with specific uses in mind, so it *might* better
 than the original for you, and if it does, it is likely to be slightly
 faster.
 
+
 Non-commercial use only
 -----------------------
 
 This (and other forks) are based on Laurens van der Maaten's original
 [code](http://homepage.tudelft.nl/19j49/t-SNE.html) which is licensed
-for **non-commercial use only**. Sorry, that is just how it is.
+for **[non-commercial use only](fasttsne/orig-lvdm/Readme.txt)**.
+Sorry, that is just how it is.
+
 
 Changes from the osdf version
 -----------------------------
