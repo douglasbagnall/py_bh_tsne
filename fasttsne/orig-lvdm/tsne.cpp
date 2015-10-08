@@ -326,13 +326,15 @@ void TSNE::symmetrizeMatrix(int** _row_P, int** _col_P, double** _val_P, int N) 
             // Check whether element (col_P[i], n) is present
             bool present = false;
             for(int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
-                if(col_P[m] == n) present = true;
+                if(col_P[m] == n){
+					present = true;
+					break;
+				}
             }
-            if(present) row_counts[n]++;
-            else {
-                row_counts[n]++;
+            if (! present) {
                 row_counts[col_P[i]]++;
             }
+			row_counts[n]++;
         }
     }
     int no_elem = 0;
