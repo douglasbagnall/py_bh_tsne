@@ -43,7 +43,7 @@ def main():
         classes = np.hstack((train[1], val[1], test[1]))
 
     Y = fast_tsne(mnist, perplexity=args.perplexity, theta=0.5,
-                  normalise=args.normalise, pca_d=args.pca_first)
+                  normalise_mean=args.normalise, pca_d=args.pca_first)
 
     digits = set(classes)
     fig = plt.figure()
