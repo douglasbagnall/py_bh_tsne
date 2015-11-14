@@ -6,13 +6,21 @@ than the original for you, and if it does, it is likely to be slightly
 faster.
 
 
-Non-commercial use only
------------------------
+License
+-------
 
 This (and other forks) are based on Laurens van der Maaten's original
-[code](http://homepage.tudelft.nl/19j49/t-SNE.html) which is licensed
-for **[non-commercial use only](fasttsne/orig-lvdm/Readme.txt)**.
-Sorry, that is just how it is.
+[code](http://homepage.tudelft.nl/19j49/t-SNE.html) which is now licensed
+under a [4 clause BSD
+license](https://github.com/lvdmaaten/bhtsne/blob/master/LICENSE.txt).
+Previously it was “for non-commercial purposes only”, and this
+language is still used in some places.
+
+My modifications can be used under the same terms as the upstream
+t-SNE, whatever they are at any particular time.
+
+This product includes software developed by the Delft University of
+Technology.
 
 
 Changes from the osdf version
@@ -24,6 +32,7 @@ Changes from the osdf version
 * Exact t-SNE option is gone.
 * Options for normalising vectors to unit hyper-sphere.
 * Fiddling with pre-t-SNE PCA options.
+
 
 Requirements
 ------------
